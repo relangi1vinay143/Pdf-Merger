@@ -1,0 +1,17 @@
+.back_ground{
+    background-image: url("/static/application1/Images/A1.png");
+    background-size:cover;
+    background-repeat:no-repeat;
+    display: flex;
+    justify-content:center;
+    align-items: center;
+    width:100%;
+    height:100vh;
+    margin:0;
+}
+.jumbotron 
+{
+    text-align: center;
+    padding: 2rem;
+    border-radius: 20px;
+}

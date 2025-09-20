@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <title>PDF Merger</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'application1/CSS/index.css' %}">
+</head>
+<body class="back_ground">
+    <div class="jumbotron text-center">
+        <h2 style="margin:20px;">Upload PDFs to Merge</h2>
+        <p id="statusMsg" style="color: red; font-weight: bold;"></p>
+
+        <form id="mergeForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input class="form-control" type="file" name="pdfs" multiple required style="margin-bottom:15px;">
+            <button type="submit" class="btn btn-primary" style="margin:10px;">Merge PDFs</button>
+            <button type="button" id="stopBtn" class="btn btn-danger">Stop</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById("mergeForm");
+        const statusMsg = document.getElementById("statusMsg");
+        const stopBtn = document.getElementById("stopBtn");
+        let controller = null;
+
+        form.addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            controller = new AbortController();
+            statusMsg.innerText = "Merging is under process, please wait...";
+
+            fetch("/", { method: "POST", body: formData, signal: controller.signal })
+                .then(response => {
+                    const type = response.headers.get("content-type");
+                    if (type && type.includes("application/pdf")) {
+                        return response.blob();
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data instanceof Blob) {
+                        statusMsg.innerText = "👍 Merging completed!";
+                        const url = URL.createObjectURL(data);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "merged.pdf";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    } else {
+                        statusMsg.innerText = data.error;
+                    }
+                })
+                .catch(err => {
+                    if (err.name === "AbortError") {
+                        statusMsg.innerText = "😒 Merging stopped by user!";
+                    } else {
+                        statusMsg.innerText = "❌ Error while merging!";
+                    }
+                });
+        });
+
+        stopBtn.addEventListener("click", () => controller && controller.abort());
+    </script>
+</body>
+</html>
