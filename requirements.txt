@@ -13,3 +13,5 @@ gunicorn
 pypdf
 setuptools
 setuptools-distutils
+setuptools
+setuptools-distutils
